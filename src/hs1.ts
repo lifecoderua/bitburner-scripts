@@ -11,7 +11,7 @@
  */
 
 import { NS } from '@ns';
-import { Logger } from './lib/logger';
+import { Logger } from './lib/logger.ts';
 
 // List of servers to deploy the hack script to; this list comes from the Beginner's guide
 const servers = [
