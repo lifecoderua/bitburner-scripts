@@ -35,6 +35,7 @@ export async function main(ns: NS) {
     ensureHiring();
     ascend();
     supplyEquipment();
+    manageWarfare();
     assignJobs();
     await ns.sleep(10000);
   }
@@ -77,7 +78,7 @@ function getJobStage() {
     return 'grow';
   }
 
-  if (gang.territory < 1 && gang.territoryClashChance === 0) {
+  if (gang.territory < 1 && gang.territoryClashChance === 0 && !shouldRunWarfare()) {
     return 'prepareWarfare'
   }
 
@@ -106,6 +107,8 @@ async function assignJobs() {
     let task = TASKS.TRAIN;
     const mob = ns.gang.getMemberInformation(name);
     if (stage === 'grow' && mob.str > 2000) {
+      // TODO: optimize - check the next hiring threshold and time required
+      //  if more than x mins - train
       task = TASKS.GROW;
     }
     if (stage === 'prepareWarfare' && mob.str > WARFARE_STR_THRESHOLD) {
@@ -169,4 +172,27 @@ async function supplyEquipment() {
       }
     })
   }
+}
+
+function shouldRunWarfare() {
+  const { ns } = wrap;
+
+  const gangsInfo = ns.gang.getOtherGangInformation();
+  const playerGangName = ns.gang.getGangInformation().faction;
+  const gangNames = Object.keys(gangsInfo).filter((name) => name !== playerGangName);
+  const chances: number[] = gangNames.map((gangName) => {
+    return ns.gang.getChanceToWinClash(gangName);
+  });
+  // DEBUG
+  ns.print(`Clash win chances: ${chances}`);
+
+  const shouldEngageWarfare = !chances.some((chance) => chance < 0.9);
+  ns.print(`Should engage Warfare: ${shouldEngageWarfare}`);
+  return shouldEngageWarfare;
+}
+
+function manageWarfare() {
+  const { ns } = wrap;
+
+  ns.gang.setTerritoryWarfare(shouldRunWarfare());
 }
