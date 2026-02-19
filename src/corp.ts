@@ -1,3 +1,6 @@
+const CORP_NAME = 'GooCORP';
+const SELF_FUNDED = true; // TODO: allow to override on BN3
+
 declare global {
   interface Math { bb: any; }
 }
@@ -17,7 +20,26 @@ const cities: CityName[] = [
 export async function main(ns: NS) {
   Math.bb.ns = ns;
   ns.ui.openTail();
+  
+  // open Corp
+  await setupCorp();
+  
+  // TODO: Make it in stages
+  // TODO: Make stages declarative ([resource: count]) and idempotent (should survive restart).
   await upgradeOfficeSize('Agro', 4);
+}
+
+async function setupCorp() {
+  const ns: NS = Math.bb.ns;
+
+  if (ns.corporation.hasCorporation()) {
+    return;
+  }
+
+  while (!ns.corporation.canCreateCorporation(true)) {
+    await ns.sleep(10_000);
+  }
+  ns.corporation.createCorporation('GooCORP', true);
 }
 
 async function upgradeOfficeSize(divisionName: string, targetSize = 4) {
