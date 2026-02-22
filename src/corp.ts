@@ -24,6 +24,10 @@ export async function main(ns: NS) {
   // open Corp
   await setupCorp();
   
+  await mainPath();
+}
+
+async function mainPath() {
   await stage1();
 }
 
